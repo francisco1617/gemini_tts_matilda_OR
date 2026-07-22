@@ -176,7 +176,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
             "model": model,
             "input": full_message,
             "voice": voice,
-            "response_format": "pcm",
+            "response_format": "mp3",
         }
 
         headers = {
@@ -223,9 +223,9 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
                     raise HomeAssistantError("Empty audio response from OpenRouter")
 
                 LOGGER.info(
-                    "OpenRouter TTS OK: %s bytes, format=pcm", len(audio_bytes)
+                    "OpenRouter TTS OK: %s bytes, format=mp3", len(audio_bytes)
                 )
-                return "pcm", audio_bytes
+                return "mp3", audio_bytes
 
         except aiohttp.ClientError as exc:
             LOGGER.error("OpenRouter connection error: %s", exc)
