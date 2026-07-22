@@ -66,20 +66,19 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
     _attr_default_language = "en-US"
 
     _supported_voices = [
-        Voice(voice.split(" ", 1)[0].lower(), voice)
-        for voice in (
-            "Zephyr (Bright)", "Puck (Upbeat)", "Charon (Informative)",
-            "Kore (Firm)", "Fenrir (Excitable)", "Leda (Youthful)",
-            "Orus (Firm)", "Aoede (Breezy)", "Callirrhoe (Easy-going)",
-            "Autonoe (Bright)", "Enceladus (Breathy)", "Iapetus (Clear)",
-            "Umbriel (Easy-going)", "Algieba (Smooth)", "Despina (Smooth)",
-            "Erinome (Clear)", "Algenib (Gravelly)", "Rasalgethi (Informative)",
-            "Laomedeia (Upbeat)", "Achernar (Soft)", "Alnilam (Firm)",
-            "Schedar (Even)", "Gacrux (Mature)", "Pulcherrima (Forward)",
-            "Achird (Friendly)", "Zubenelgenubi (Casual)",
-            "Vindemiatrix (Gentle)", "Sadachbia (Lively)",
-            "Sadaltager (Knowledgeable)", "Sulafat (Warm)",
-        )
+        Voice("alloy", "Alloy (Neutral)"),
+        Voice("ash", "Ash (Calm)"),
+        Voice("ballad", "Ballad (Warm)"),
+        Voice("cedar", "Cedar (Recommended)"),
+        Voice("coral", "Coral (Friendly)"),
+        Voice("echo", "Echo (Smooth)"),
+        Voice("fable", "Fable (Expressive)"),
+        Voice("marin", "Marin (Recommended)"),
+        Voice("nova", "Nova (Energetic)"),
+        Voice("onyx", "Onyx (Authoritative)"),
+        Voice("sage", "Sage (Thoughtful)"),
+        Voice("shimmer", "Shimmer (Gentle)"),
+        Voice("verse", "Verse (Versatile)"),
     ]
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -159,7 +158,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
             "model": model,
             "input": full_message,
             "voice": voice,
-            "response_format": "wav",
+            "response_format": "mp3",
         }
 
         headers = {
