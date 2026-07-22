@@ -146,6 +146,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
 
         Injects the Director's Prompt before the message and sends
         to OpenRouter's OpenAI-compatible TTS endpoint.
+        Returns WAV (PCM with header) so HA's ffmpeg pipeline can decode it.
         """
         # === KEY MODIFICATION: inject Director's Prompt before message ===
         prompt = options.get(CONF_TTS_PROMPT) or self.config_entry.options.get(
@@ -172,11 +173,13 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
         )
         voice = options.get(ATTR_VOICE, self._supported_voices[0].voice_id)
 
+        # OpenRouter exige response_format=pcm para Gemini TTS
+        # Gemini 3.1 Flash TTS produce: PCM 24kHz / 16-bit / mono
         payload = {
             "model": model,
             "input": full_message,
             "voice": voice,
-            "response_format": "mp3",
+            "response_format": "pcm",
         }
 
         headers = {
@@ -218,14 +221,17 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
                         f"OpenRouter returned non-audio: {content_type}"
                     )
 
-                audio_bytes = await resp.read()
-                if not audio_bytes:
+                pcm_bytes = await resp.read()
+                if not pcm_bytes:
                     raise HomeAssistantError("Empty audio response from OpenRouter")
 
+                # Envolver PCM crudo en header WAV para que ffmpeg pueda decodificar
+                wav_bytes = self._pcm_to_wav(pcm_bytes)
                 LOGGER.info(
-                    "OpenRouter TTS OK: %s bytes, format=mp3", len(audio_bytes)
+                    "OpenRouter TTS OK: pcm=%s bytes -> wav=%s bytes",
+                    len(pcm_bytes), len(wav_bytes),
                 )
-                return "mp3", audio_bytes
+                return "wav", wav_bytes
 
         except aiohttp.ClientError as exc:
             LOGGER.error("OpenRouter connection error: %s", exc)
@@ -235,3 +241,38 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
             raise HomeAssistantError(
                 "OpenRouter TTS timeout — el modelo tardó más de 120s"
             ) from exc
+
+    @staticmethod
+    def _pcm_to_wav(pcm_data: bytes) -> bytes:
+        """Wrap raw PCM bytes in a WAV header.
+
+        Gemini 3.1 Flash TTS outputs PCM 24kHz / 16-bit / mono.
+        Without a WAV header, HA's ffmpeg cannot decode the raw PCM.
+        """
+        import struct
+
+        sample_rate = 24000
+        bits_per_sample = 16
+        channels = 1
+        num_samples = len(pcm_data) // (bits_per_sample // 8 * channels)
+        data_size = len(pcm_data)
+
+        # WAV header = 44 bytes
+        header = struct.pack(
+            "<4sI4s4sIHHIIHH4sI",
+            b"RIFF",                    # ChunkID
+            36 + data_size,             # ChunkSize
+            b"WAVE",                    # Format
+            b"fmt ",                    # Subchunk1ID
+            16,                         # Subchunk1Size (PCM)
+            1,                          # AudioFormat (1 = PCM)
+            channels,                   # NumChannels
+            sample_rate,                # SampleRate
+            sample_rate * channels * (bits_per_sample // 8),  # ByteRate
+            channels * (bits_per_sample // 8),                 # BlockAlign
+            bits_per_sample,            # BitsPerSample
+            b"data",                    # Subchunk2ID
+            data_size,                  # Subchunk2Size
+        )
+
+        return header + pcm_data
