@@ -1,0 +1,12 @@
+{
+  "domain": "gemini_tts_matilda_OR",
+  "name": "Gemini TTS Matilda (OpenRouter)",
+  "codeowners": ["@francisco1617"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/francisco1617/gemini_tts_matilda_OR",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "requirements": ["aiohttp>=3.9.0"],
+  "version": "1.0.0"
+}

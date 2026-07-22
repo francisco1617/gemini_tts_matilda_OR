@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to OpenRouter",
+        "description": "Enter your OpenRouter API key to enable Gemini TTS with Matilda's voice. Get your key at [{api_key_url}]({api_key_url}).",
+        "data": {
+          "api_key": "API Key",
+          "chat_model": "TTS Model",
+          "temperature": "Temperature",
+          "tts_prompt": "Director's Prompt (voice character)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update API Key",
+        "description": "Enter a new OpenRouter API key. Get your key at [{api_key_url}]({api_key_url}).",
+        "data": {
+          "api_key": "API Key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to OpenRouter. Check your API key."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Gemini TTS Matilda (OpenRouter)",
+        "description": "Leave API Key empty to keep the current one, or enter a new one.",
+        "data": {
+          "api_key": "API Key (leave empty to keep current)",
+          "chat_model": "TTS Model",
+          "temperature": "Temperature",
+          "tts_prompt": "Director's Prompt (voice character)"
+        }
+      }
+    }
+  }
+}
