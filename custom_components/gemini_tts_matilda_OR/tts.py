@@ -65,20 +65,38 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
     ]
     _attr_default_language = "en-US"
 
+    # Voces nativas de Gemini 3.1 Flash TTS (verificado via OpenRouter API)
     _supported_voices = [
-        Voice("alloy", "Alloy (Neutral)"),
-        Voice("ash", "Ash (Calm)"),
-        Voice("ballad", "Ballad (Warm)"),
-        Voice("cedar", "Cedar (Recommended)"),
-        Voice("coral", "Coral (Friendly)"),
-        Voice("echo", "Echo (Smooth)"),
-        Voice("fable", "Fable (Expressive)"),
-        Voice("marin", "Marin (Recommended)"),
-        Voice("nova", "Nova (Energetic)"),
-        Voice("onyx", "Onyx (Authoritative)"),
-        Voice("sage", "Sage (Thoughtful)"),
-        Voice("shimmer", "Shimmer (Gentle)"),
-        Voice("verse", "Verse (Versatile)"),
+        Voice("Zephyr", "Zephyr (Bright)"),
+        Voice("Puck", "Puck (Upbeat)"),
+        Voice("Charon", "Charon (Informative)"),
+        Voice("Kore", "Kore (Firm)"),
+        Voice("Fenrir", "Fenrir (Firm)"),
+        Voice("Leda", "Leda (Youthful)"),
+        Voice("Orus", "Orus (Firm)"),
+        Voice("Aoede", "Aoede (Breezy)"),
+        Voice("Callirrhoe", "Callirrhoe (Easy-going)"),
+        Voice("Autonoe", "Autonoe (Bright)"),
+        Voice("Enceladus", "Enceladus (Breathy)"),
+        Voice("Iapetus", "Iapetus (Clear)"),
+        Voice("Umbriel", "Umbriel (Easy-going)"),
+        Voice("Algieba", "Algieba (Efficient)"),
+        Voice("Despina", "Despina (Casual)"),
+        Voice("Erinome", "Erinome (Casual)"),
+        Voice("Algenib", "Algenib (Dry)"),
+        Voice("Rasalgethi", "Rasalgethi (Informative)"),
+        Voice("Laomedeia", "Laomedeia (Upbeat)"),
+        Voice("Achernar", "Achernar (Soft)"),
+        Voice("Alnilam", "Alnilam (Airy)"),
+        Voice("Schedar", "Schedar (Even)"),
+        Voice("Gacrux", "Gacrux (Calm)"),
+        Voice("Pulcherrima", "Pulcherrima (Fast)"),
+        Voice("Achird", "Achird (Friendly)"),
+        Voice("Zubenelgenubi", "Zubenelgenubi (Casual)"),
+        Voice("Vindemiatrix", "Vindemiatrix (Gentle)"),
+        Voice("Sadachbia", "Sadachbia (Fun)"),
+        Voice("Sadaltager", "Sadaltager (Knowledgeable)"),
+        Voice("Sulafat", "Sulafat (Warm)"),
     ]
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -152,7 +170,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
         model = self.config_entry.options.get(
             CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL
         )
-        voice = options.get(ATTR_VOICE, "Kore")
+        voice = options.get(ATTR_VOICE, self._supported_voices[0].voice_id)
 
         payload = {
             "model": model,
@@ -187,7 +205,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
                 if not audio_bytes:
                     raise HomeAssistantError("Empty audio response from OpenRouter")
 
-                return "wav", audio_bytes
+                return "mp3", audio_bytes
 
         except aiohttp.ClientError as exc:
             LOGGER.error("OpenRouter connection error: %s", exc)
