@@ -176,7 +176,7 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
             "model": model,
             "input": full_message,
             "voice": voice,
-            "response_format": "mp3",
+            "response_format": "pcm",
         }
 
         headers = {
@@ -190,23 +190,48 @@ class MatildaOREntity(TextToSpeechEntity, Entity):
                 OPENROUTER_TTS_URL,
                 json=payload,
                 headers=headers,
-                timeout=aiohttp.ClientTimeout(total=30),
+                timeout=aiohttp.ClientTimeout(total=120),
             ) as resp:
+                content_type = resp.headers.get("Content-Type", "")
+                LOGGER.info(
+                    "OpenRouter TTS response: status=%s content_type=%s size=%s",
+                    resp.status, content_type, resp.headers.get("Content-Length", "?"),
+                )
+
                 if resp.status != 200:
                     body = await resp.text()
                     LOGGER.error(
-                        "OpenRouter TTS error %s: %s", resp.status, body[:200]
+                        "OpenRouter TTS error %s: %s", resp.status, body[:500]
                     )
                     raise HomeAssistantError(
-                        f"OpenRouter TTS failed (HTTP {resp.status})"
+                        f"OpenRouter TTS failed (HTTP {resp.status}): {body[:200]}"
+                    )
+
+                # Verificar que realmente recibimos audio, no un JSON de error
+                if "audio" not in content_type:
+                    body = await resp.text()
+                    LOGGER.error(
+                        "OpenRouter TTS no-audio response: content_type=%s body=%s",
+                        content_type, body[:500],
+                    )
+                    raise HomeAssistantError(
+                        f"OpenRouter returned non-audio: {content_type}"
                     )
 
                 audio_bytes = await resp.read()
                 if not audio_bytes:
                     raise HomeAssistantError("Empty audio response from OpenRouter")
 
-                return "mp3", audio_bytes
+                LOGGER.info(
+                    "OpenRouter TTS OK: %s bytes, format=pcm", len(audio_bytes)
+                )
+                return "pcm", audio_bytes
 
         except aiohttp.ClientError as exc:
             LOGGER.error("OpenRouter connection error: %s", exc)
             raise HomeAssistantError(f"OpenRouter connection failed: {exc}") from exc
+        except TimeoutError as exc:
+            LOGGER.error("OpenRouter TTS timeout (120s) for text: %s", message[:50])
+            raise HomeAssistantError(
+                "OpenRouter TTS timeout — el modelo tardó más de 120s"
+            ) from exc
